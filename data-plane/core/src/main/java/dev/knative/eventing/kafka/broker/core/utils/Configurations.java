@@ -41,7 +41,9 @@ public class Configurations {
 
         final var props = new Properties();
         try (final var configReader = new FileReader(path)) {
+            logger.info("about to load properties from file");
             props.load(configReader);
+            logger.info("loaded properties from file");
         } catch (IOException e) {
             logger.error("failed to load configurations from file {}", keyValue("path", path), e);
         }
@@ -55,9 +57,11 @@ public class Configurations {
      * Note: this method is blocking, thus it shouldn't be called on the event loop.
      */
     public static JsonObject readPropertiesAsJsonSync(final String path) {
+        logger.info("reading properties file");
         final var props = readPropertiesSync(path);
 
         final JsonObject json = new JsonObject();
+        logger.info("converting properties to JsonObject");
         props.stringPropertyNames().forEach(name -> json.put(name, convert(props.getProperty(name))));
         return json;
     }

@@ -95,26 +95,40 @@ public class Main {
                 .setMetricsOptions(Metrics.getOptions(env))
                 .setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
 
+        logger.info("Created vertx");
+
         // Register Contract message codec
         ContractMessageCodec.register(vertx.eventBus());
 
+        logger.info("Registered message codec");
+
+        logger.info("about to read server properties from file {}", env.getHttpServerConfigFilePath());
         // Read http server configuration and merge it with port from env
         HttpServerOptions httpServerOptions =
                 new HttpServerOptions(Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath()));
+
+        logger.info("Read http server properties from file {}", env.getHttpServerConfigFilePath());
         httpServerOptions.setPort(env.getIngressPort());
         httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
+
+        logger.info("created http server options");
 
         // Read https server configuration and merge it with port from env
         HttpServerOptions httpsServerOptions =
                 new HttpServerOptions(Configurations.readPropertiesAsJsonSync(env.getHttpServerConfigFilePath()));
 
+        logger.info("Read https server properties from file {}", env.getHttpServerConfigFilePath());
+
         // Set the TLS port to a different port so that they don't have conflicts
         httpsServerOptions.setPort(env.getIngressTLSPort());
         httpsServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
+        logger.info("created https server options");
+
         // Setup OIDC discovery config
         OIDCDiscoveryConfig oidcDiscoveryConfig = null;
         try {
+            logger.info("building OIDC config");
             oidcDiscoveryConfig = OIDCDiscoveryConfig.build(vertx)
                     .toCompletionStage()
                     .toCompletableFuture()
@@ -130,7 +144,9 @@ public class Main {
             }
         }
 
+
         final var kubernetesClient = new KubernetesClientBuilder().build();
+        logger.info("built kubeclient");
         final SharedInformerFactory sharedInformerFactory = kubernetesClient.informers();
         final var eventTypeClient = kubernetesClient.resources(EventType.class);
         SharedIndexInformer<EventType> eventTypeInformer = null;
@@ -138,6 +154,7 @@ public class Main {
             eventTypeInformer = sharedInformerFactory.sharedIndexInformerFor(
                     EventType.class, 30 * 1000L); // refresh every 30 seconds
             sharedInformerFactory.startAllRegisteredInformers().get(5, TimeUnit.SECONDS);
+            logger.info("started informers");
         } catch (InterruptedException | TimeoutException interruptedException) {
             logger.warn(
                     "failed to start informers, this will lead to unnecessary POST requests for eventtype autocreate");

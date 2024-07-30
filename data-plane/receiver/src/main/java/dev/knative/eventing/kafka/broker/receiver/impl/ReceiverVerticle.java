@@ -130,15 +130,19 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     @Override
     public void start(final Promise<Void> startPromise) {
+      logger.info("starting receiver verticle...");
         this.ingressProducerStore = this.ingressProducerStoreFactory.apply(vertx);
         this.messageConsumer = ResourcesReconciler.builder()
                 .watchIngress(IngressReconcilerListener.all(this.ingressProducerStore, this.ingressRequestHandler))
                 .buildAndListen(vertx);
+        logger.info("started message consumer");
 
         TokenVerifier tokenVerifier = new TokenVerifierImpl(vertx, oidcDiscoveryConfig);
         this.authenticationHandler = new AuthenticationHandler(tokenVerifier);
 
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
+
+        logger.info("create http server");
 
         // check whether the secret volume is mounted
         if (secretVolume.exists()) {
@@ -146,11 +150,13 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
             // check whether the tls.key and tls.crt files exist
 
             if (this.tlsKeyFile.exists() && this.tlsCrtFile.exists() && httpsServerOptions != null) {
+              logger.info("creating https server");
                 PemKeyCertOptions keyCertOptions =
                         new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
                 this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
 
                 this.httpsServer = vertx.createHttpServer(this.httpsServerOptions);
+                logger.info("created https server");
             }
         }
 
