@@ -140,7 +140,7 @@ public class Main {
             } else {
                 logger.warn(
                         "Could not load OIDC configuration. This will lead to problems, when the {} flag will be enabled later",
-                        FeaturesConfig.KEY_AUTHENTICATION_OIDC);
+                        FeaturesConfig.KEY_AUTHENTICATION_OIDC, ex);
             }
         }
 
